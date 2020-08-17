@@ -31,11 +31,7 @@ module Roles
     attribute :name
     attribute :assignable
 
-    def validate
-      check_permission_prerequisites
-
-      super
-    end
+    validate :check_permission_prerequisites
 
     def assignable_permissions
       if model.is_a?(GlobalRole)

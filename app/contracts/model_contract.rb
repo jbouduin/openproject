@@ -41,10 +41,6 @@ class ModelContract < Reform::Contract
       @writable_conditions ||= []
     end
 
-    def attribute_validations
-      @attribute_validations ||= []
-    end
-
     def attribute_permissions
       @attribute_permissions ||= {}
     end
@@ -65,9 +61,7 @@ class ModelContract < Reform::Contract
       add_writable(attribute, options[:writeable])
       attribute_permission(attribute, options[:permission])
 
-      if block
-        attribute_validations << block
-      end
+      validate(attribute, &block) if block
     end
 
     def default_attribute_permission(permission)
@@ -126,14 +120,12 @@ class ModelContract < Reform::Contract
     writable_attributes.include?(attribute.to_s)
   end
 
-  def validate
+  def validate(*args)
+    super()
     readonly_attributes_unchanged
-    run_attribute_validations
-
-    super
 
     # Allow subclasses to check only contract errors
-    return errors.empty? unless validate_model?
+    return @result.errors.empty? unless validate_model?
 
     model.valid?
 
@@ -141,9 +133,9 @@ class ModelContract < Reform::Contract
     # order to have them available at one place.
     # This is something we need as long as we have validations split
     # among the model and its contract.
-    errors.merge!(model.errors, [])
+    errors.merge!(model.errors)
 
-    errors.empty?
+    @result.errors.empty?
   end
 
   # Methods required to get ActiveModel error messages working
@@ -196,14 +188,6 @@ class ModelContract < Reform::Contract
     end
 
     changed
-  end
-
-  def run_attribute_validations
-    attribute_validations.each { |validation| instance_exec(&validation) }
-  end
-
-  def attribute_validations
-    collect_ancestor_attributes(:attribute_validations)
   end
 
   def collect_ancestor_attribute_aliases

@@ -77,3 +77,34 @@ require 'reform/contract'
 class Reform::Form::ActiveModel::Errors
   prepend OpenProject::Patches::Reform
 end
+
+class Reform::Form::Validations::Result::ResultErrors
+  # Override gem method completely to allow passing error params to the
+  # ActiveModel error objects. This allows parameterizing error messages e.g.
+  # add(:some_property, :greater_than, count: 0)
+  def add(key, error_text, error_params = {})
+    # use rails magic to get the correct error_text and make sure we still update details and fields
+    text = @amv_errors.add(key, error_text, error_params)
+
+    # using error_text instead of text to either keep the symbol which will be
+    # magically replaced with the translate or directly the string - this is also
+    # required otherwise in the custom_errors method we will add the actual message in the
+    # ActiveModel::Errors#details which is not correct if a symbol was passed here
+    Reform::Contract::CustomError.new(key, error_text, @result.to_results)
+
+    # but since messages method is actually already defined in `Reform::Contract::Result::Errors
+    # we need to update the @dotted_errors instance variable to add or merge a new error
+    @dotted_errors.key?(key) ? @dotted_errors[key] |= text : @dotted_errors[key] = text
+    instance_variable_set(:@dotted_errors, @dotted_errors)
+  end
+
+  def merge!(ar_errors)
+    ar_errors.details.each do |identifier, details|
+      details.each do |detail|
+        error_detail = detail.dup
+        error_symbol = detail.delete(:error)
+        add(identifier, error_symbol, error_detail)
+      end
+    end
+  end
+end
