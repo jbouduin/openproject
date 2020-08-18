@@ -28,10 +28,18 @@
 # See docs/COPYRIGHT.rdoc for more details.
 #++
 
-require 'reform'
-require 'reform/form/active_model/model_validations'
+class ModelContract < Disposable::Twin
+  require "disposable/twin/composition" # Expose.
+  include Expose
 
-class ModelContract < Reform::Contract
+  feature Setup
+  feature Setup::SkipSetter
+  feature Default
+
+  include ActiveModel::Validations
+  extend ActiveModel::Naming
+  extend ActiveModel::Translation
+
   class << self
     def writable_attributes
       @writable_attributes ||= []
@@ -53,6 +61,18 @@ class ModelContract < Reform::Contract
       raise "Cannot define the alias to #{db} to be the same: #{outside}" if db == outside
 
       attribute_aliases[db] = outside
+    end
+
+    def property(name, options = {}, &block)
+      if twin = options.delete(:form)
+        options[:twin] = twin
+      end
+
+      if validates_options = options[:validates]
+        validates name, validates_options
+      end
+
+      super
     end
 
     def attribute(attribute, options = {}, &block)
@@ -146,7 +166,11 @@ class ModelContract < Reform::Contract
   end
 
   def self.model
-    @model ||= name.deconstantize.singularize.constantize
+    @model ||= if name == 'ModelContract'
+                 ActiveRecord::Base
+               else
+                 name.deconstantize.singularize.constantize
+               end
   end
 
   # use activerecord as the base scope instead of 'activemodel' to be compatible
