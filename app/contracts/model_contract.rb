@@ -145,7 +145,7 @@ class ModelContract < Disposable::Twin
     readonly_attributes_unchanged
 
     # Allow subclasses to check only contract errors
-    return @result.errors.empty? unless validate_model?
+    return errors.empty? unless validate_model?
 
     model.valid?
 
@@ -155,7 +155,7 @@ class ModelContract < Disposable::Twin
     # among the model and its contract.
     errors.merge!(model.errors)
 
-    @result.errors.empty?
+    errors.empty?
   end
 
   # Methods required to get ActiveModel error messages working
@@ -166,10 +166,10 @@ class ModelContract < Disposable::Twin
   end
 
   def self.model
-    @model ||= if name == 'ModelContract'
-                 ActiveRecord::Base
-               else
+    @model ||= begin
                  name.deconstantize.singularize.constantize
+               rescue NameError
+                 ActiveRecord::Base
                end
   end
 

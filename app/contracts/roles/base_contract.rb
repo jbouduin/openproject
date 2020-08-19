@@ -79,10 +79,9 @@ module Roles
 
     def add_unmet_dependency_error(selected, unmet)
       errors.add(:permissions,
-                 I18n.t(:'activerecord.errors.models.role.permissions.dependency_missing',
-                        permission: I18n.t("permission_#{selected}"),
-                        dependency: I18n.t("permission_#{unmet}")),
-                 error_symbol: :dependency_missing)
+                 :dependency_missing,
+                 permission: I18n.t("permission_#{selected}"),
+                 dependency: I18n.t("permission_#{unmet}"))
     end
   end
 end
