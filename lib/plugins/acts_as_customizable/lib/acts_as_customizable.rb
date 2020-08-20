@@ -61,6 +61,7 @@ module Redmine
       module InstanceMethods
         def self.included(base)
           base.extend ClassMethods
+          base.extend HumanAttributeName
         end
 
         def available_custom_fields

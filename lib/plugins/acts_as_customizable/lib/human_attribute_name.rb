@@ -1,5 +1,3 @@
-#-- encoding: UTF-8
-
 #-- copyright
 # OpenProject is an open source project management software.
 # Copyright (C) 2012-2020 the OpenProject GmbH
@@ -28,20 +26,24 @@
 # See docs/COPYRIGHT.rdoc for more details.
 #++
 
-# This patch should no longer be necessary.
-# But we have references to symbolds_and_messages_for as well as for symbols_for all over
-# the code base.
-module OpenProject::ActiveModelErrorsPatch
-  def symbols_and_messages_for(attribute)
-    symbols = details[attribute].map { |e| e[:error] }
-    messages = full_messages_for(attribute)
+module Redmine
+  module Acts
+    module Customizable
+      module HumanAttributeName
+        # If a model acts_as_customizable it will inject attributes like 'custom_field_1' into itself.
+        # Using this method, they can now be i18ned same as every other attribute. This is for example
+        # for error messages following the format of '%{attribute} %{message}' where `attribute` is resolved
+        # by calling IncludingClass.human_attribute_name
+        def human_attribute_name(attribute, options = {})
+          match = /\Acustom_field_(?<id>\d+)\z/.match(attribute)
 
-    symbols.zip(messages)
-  end
-
-  def symbols_for(attribute)
-    details[attribute].map { |r| r[:error] }
+          if match
+            CustomField.find_by(id: match[:id]).name
+          else
+            super
+          end
+        end
+      end
+    end
   end
 end
-
-ActiveModel::Errors.prepend(OpenProject::ActiveModelErrorsPatch)

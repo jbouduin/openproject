@@ -40,6 +40,9 @@ class ModelContract < Disposable::Twin
   extend ActiveModel::Naming
   extend ActiveModel::Translation
 
+  # Allows human_attribute_name to resolve custom fields correctly
+  extend Redmine::Acts::Customizable::HumanAttributeName
+
   class << self
     def writable_attributes
       @writable_attributes ||= []
