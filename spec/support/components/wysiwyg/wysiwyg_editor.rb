@@ -129,7 +129,7 @@ module Components
 
     def click_toolbar_button(label)
       # strangely, we need visible: :all here
-      container.find('.ck-button', visible: :all, text: label).click
+      page.find('.ck-button', visible: :all, text: label).click
     end
 
     def type_slowly(*text)
