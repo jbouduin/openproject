@@ -37,6 +37,7 @@ module TimeEntries
              :project,
              :available_custom_fields,
              :new_record?,
+             :id,
              to: :model
 
     def self.model
